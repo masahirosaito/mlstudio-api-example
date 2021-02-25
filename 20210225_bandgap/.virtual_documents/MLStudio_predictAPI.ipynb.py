@@ -9,7 +9,6 @@ from sklearn.metrics import confusion_matrix
 
 
 from pymatgen import MPRester
-from pymatgen import Lattice, Structure, Molecule
 
 
 # URL for the web service
@@ -77,34 +76,21 @@ def get_material_data(mpID):
 
 true_test = [ (i > 2) & (i < 3) for i in test_target]
 predict_test = [ (i > 2) & (i < 3) for i in test_predict]
-positives=[]
-false_negatives=[]
+positive=[]
+f_negative=[]
 for mpID, true, predict, bandgap in zip(test_ID, true_test, predict_test, test_target):
     if predict:
-        line=[]
         data = get_material_data(mpID)
-        line.append(mpID)
-        line.append(data[0]['pretty_formula'])
-        line.append(data[0]['spacegroup']['symbol'])
-        bg_true = bandgap
-        line.append(bg_true)
-        if bg_true > 2 and bg_true < 3:
-            line.append('〇')
+        if true:
+            correctness='〇'
         else:
-            line.append('×')
-        positives.append(line)
+            correctness='×'
+        positive.append([mpID, data[0]['pretty_formula'], data[0]['spacegroup']['symbol'], bandgap, correctness])
     elif true and not(predict):
-        line=[]
         data = get_material_data(mpID)
-        line.append(mpID)
-        line.append(data[0]['pretty_formula'])
-        line.append(data[0]['spacegroup']['symbol'])
-        line.append(bandgap)
-        false_negatives.append(line)
-positive_df = pd.DataFrame(positives,
-                  columns=['ID', 'Formula', 'Space group', 'Band gap', 'Correctness'])
-f_negative_df = pd.DataFrame(false_negatives,
-                  columns=['ID', 'Formula', 'Space group', 'Band gap'])
+        f_negative.append([mpID, data[0]['pretty_formula'], data[0]['spacegroup']['symbol'], bandgap])
+positive_df = pd.DataFrame(positive, columns=['ID', 'Formula', 'Space group', 'Band gap', 'Correctness'])
+f_negative_df = pd.DataFrame(f_negative, columns=['ID', 'Formula', 'Space group', 'Band gap'])
 
 
 positive_df
