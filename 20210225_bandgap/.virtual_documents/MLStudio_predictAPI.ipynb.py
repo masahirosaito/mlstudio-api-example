@@ -11,9 +11,7 @@ from sklearn.metrics import confusion_matrix
 from pymatgen import MPRester
 
 
-# URL for the web service
 scoring_uri = 'http://0af890ef-0e8a-4e83-b0bb-6263db52e790.eastus.azurecontainer.io/score'
-# If the service is authenticated, set the key or token
 key = 'Vv2F1vu4al7e6pOlr1TzAfZBfoSBFn2v'
 
 
