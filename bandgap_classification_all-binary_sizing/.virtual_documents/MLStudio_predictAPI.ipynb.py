@@ -8,23 +8,16 @@ from sklearn.metrics import r2_score
 from sklearn.metrics import confusion_matrix
 
 
-from pymatgen import MPRester
-
-
-scoring_uri = 'http://0af890ef-0e8a-4e83-b0bb-6263db52e790.eastus.azurecontainer.io/score'
-key = 'Vv2F1vu4al7e6pOlr1TzAfZBfoSBFn2v'
-
-
-material_key='I3mgNiZBnTJEtSa7'
+scoring_uri = 'http://3f682bdc-98bc-4078-a147-2689675a7ff1.eastus.azurecontainer.io/score'
+key = 'Gf4I7WHEciwssUPHuG3r1K3Xu941b6lq'
 
 
 def csv_to_list(csv_path):
     df = pd.read_csv(csv_path)
-    ID_list = df.iloc[:,2]
-    features_list = df.values.tolist()
-    target_list = df.iloc[:,0].values.tolist()
+    features_list = df.drop('Band_gap', axis=1).values.tolist()
+    target_list = df['Band_gap'].values.tolist()
     
-    return ID_list, target_list, features_list
+    return target_list, features_list
 
 
 def get_predict(features_list, uri, key):
@@ -38,12 +31,16 @@ def get_predict(features_list, uri, key):
     return predict_dict["result"]
 
 
-test_ID, test_target, test_features = csv_to_list('BG_test.csv')
+test_target, test_features = csv_to_list('BG_test.csv')
 test_predict = get_predict(test_features, scoring_uri, key)
 
 
-train_ID, train_target, train_features = csv_to_list('BG_train.csv')
+train_target, train_features = csv_to_list('BG_train.csv')
 train_predict = get_predict(train_features, scoring_uri, key)
+
+
+print(len(test_predict))
+print(len(train_target))
 
 
 fig = plt.figure(figsize=(7,7))
@@ -76,17 +73,15 @@ true_test = [ (i > 2) & (i < 3) for i in test_target]
 predict_test = [ (i > 2) & (i < 3) for i in test_predict]
 positive=[]
 f_negative=[]
-for mpID, true, predict, bandgap in zip(test_ID, true_test, predict_test, test_target):
+for true, predict, features, bandgap in zip(true_test, predict_test, test_features, test_target):
     if predict:
-        data = get_material_data(mpID)
         if true:
             correctness='〇'
         else:
             correctness='×'
-        positive.append([mpID, data[0]['pretty_formula'], data[0]['spacegroup']['symbol'], bandgap, correctness])
+        positive.append([features[0], features[1], features[2], bandgap, correctness])
     elif true and not(predict):
-        data = get_material_data(mpID)
-        f_negative.append([mpID, data[0]['pretty_formula'], data[0]['spacegroup']['symbol'], bandgap])
+        f_negative.append([features[0], features[1], features[2], bandgap])
 positive_df = pd.DataFrame(positive, columns=['ID', 'Formula', 'Space group', 'Band gap', 'Correctness'])
 f_negative_df = pd.DataFrame(f_negative, columns=['ID', 'Formula', 'Space group', 'Band gap'])
 
